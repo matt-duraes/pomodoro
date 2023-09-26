@@ -19,7 +19,7 @@ type formSchemaType = z.infer<typeof formSchema>;
 
 export function Home () {
 
-    const {register, handleSubmit, watch}  = useForm<formSchemaType>({
+    const {register, handleSubmit, watch, reset}  = useForm<formSchemaType>({
         resolver: zodResolver(formSchema),
         defaultValues: {
             task: '',
@@ -29,6 +29,7 @@ export function Home () {
 
     const handleCreateNewCycle = (data: formSchemaType) => {
         console.log(data)
+        reset()
     }
 
     const task = watch('task')
