@@ -3,6 +3,7 @@ import { CountdownContainer, FormContainer, HomeContainer, MinutesAmountInput, S
 import { useForm } from 'react-hook-form'
 import { zodResolver} from '@hookform/resolvers/zod'
 import { z } from 'zod';
+import { useState } from "react";
 
 // Validação dos inputs do formulário
 const formSchema = z.object({
@@ -16,8 +17,16 @@ const formSchema = z.object({
 // pegando os tipos com base nos exemplos do SCHEMA
 type formSchemaType = z.infer<typeof formSchema>;
 
+interface Cycle {
+    id: string;
+    task: string;
+    minutesAmount: number;
+}
 
 export function Home () {
+    const [cycles, setCycles] = useState<Cycle[]>([])
+    const [activeCycleId, setActiveCycleId] = useState<string | null>(null)
+    const [amountSecondsPassed, setAmountSecondsPassed ] = useState(0)
 
     const {register, handleSubmit, watch, reset}  = useForm<formSchemaType>({
         resolver: zodResolver(formSchema),
@@ -28,12 +37,29 @@ export function Home () {
     })
 
     const handleCreateNewCycle = (data: formSchemaType) => {
-        console.log(data)
+        const id = String(new Date().getTime());
+        const newCycle: Cycle = {
+            id,
+            task: data.task,
+            minutesAmount: data.minutesAmount
+        }
+        setCycles(state => [...state, newCycle])
+        setActiveCycleId(id)
         reset()
     }
 
+    const activeCycle = cycles.find(cycle => cycle.id === activeCycleId)
+    const totalSeconds = activeCycle ? activeCycle.minutesAmount * 60 : 0
+    const currentSeconds = activeCycle ? totalSeconds - amountSecondsPassed : 0
+
+    const minutesAmount = Math.floor(currentSeconds / 60)
+    const secondsAmount = currentSeconds  % 60
+
     const task = watch('task')
     const isSubmitDisabled = !task;
+
+    const minutes  =  String(minutesAmount).padStart(2, '0')
+    const seconds  =  String(secondsAmount).padStart(2, '0')
 
     return (
         <HomeContainer>
@@ -65,11 +91,11 @@ export function Home () {
                     <span>minutos.</span>
                 </FormContainer>
                 <CountdownContainer>
-                    <span>0</span>
-                    <span>0</span>
+                    <span>{minutes[0]}</span>
+                    <span>{minutes[1]}</span>
                     <Separator>:</Separator>
-                    <span>0</span>
-                    <span>0</span>
+                    <span>{seconds[0]}</span>
+                    <span>{seconds[1]}</span>
                 </CountdownContainer>
                 <StartCountButton  type="submit" disabled={isSubmitDisabled}>
                     <Play size={24} />
