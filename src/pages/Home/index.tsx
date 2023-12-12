@@ -2,51 +2,80 @@ import { HandPalm, Play } from "phosphor-react"
 import { CountdownContainer, FormContainer, HomeContainer, MinutesAmountInput, Separator, StartCountdownButton, StopCountdownButton, TaskInput} from "./styles"
 import { useForm } from 'react-hook-form'
 import { zodResolver} from '@hookform/resolvers/zod'
-import { z } from 'zod';
+import { z } from "zod"
 import { useEffect, useState } from "react";
 import { differenceInSeconds} from 'date-fns';
 
 // Validação dos inputs do formulário
 const formSchema = z.object({
-    task: z.string().min(1, 'Informa a tarefa'),
+    task: z.string().min(1, 'Informe a tarefa'),
     minutesAmount: z
         .number()
-        .min(5, 'O ciclo precisa ter no mínimo  5 minutos ')
-        .max(60, 'O ciclo precisa ter no máximo 60 minutos'),
+        .min(1, 'O ciclo precisa ter no mínimo 1 minuto ')
+        .max(60, 'O ciclo pode ter no máximo 60 minutos'),
 });
 
 // pegando os tipos com base nos exemplos do SCHEMA
 type formSchemaType = z.infer<typeof formSchema>;
 
+// criação da interface dos meus ciclos 
 interface Cycle {
     id: string;
     task: string;
     minutesAmount: number;
     startDate: Date,
     interruptedDate?: Date,
+    finishedDate ?: Date
 }
 
+
+
 export function Home () {
+
     const [cycles, setCycles] = useState<Cycle[]>([])
     const [activeCycleId, setActiveCycleId] = useState<string | null>(null)
+
+    //taskResolver para exibir no header do site
+    const [taskResolver, setTaskResolver] = useState<string | null>(null)
+    
     // total de segundos
     const [amountSecondsPassed, setAmountSecondsPassed ] = useState(0)
     const activeCycle = cycles.find(cycle => cycle.id === activeCycleId)
+
+    const totalSeconds = activeCycle ? activeCycle.minutesAmount * 60 : 0
 
     useEffect(() => {
         let interval: number;
         if(activeCycle) {
             interval = setInterval(() => {
-                setAmountSecondsPassed(
-                    differenceInSeconds(new Date(),activeCycle.startDate))
+                const secondsDifference =  differenceInSeconds(
+                    new Date(),
+                    activeCycle.startDate
+                );
+                if (secondsDifference >= totalSeconds ) {
+                    setCycles( state =>
+                        state.map((cycle) => {
+                            if (cycle.id == activeCycleId) {
+                                return {...cycle, finishedDate: new Date()}
+                            } else {
+                                return cycle
+                            }
+                        })
+                    )
+                    setAmountSecondsPassed(totalSeconds)
+                    clearInterval(interval)
+                } else {
+                    setAmountSecondsPassed(secondsDifference)
+                }
             }, 1000)
         }
+
         return () => {
             clearInterval(interval)
         }
-    },[activeCycle])
+    },[activeCycle, totalSeconds, activeCycleId])
 
-
+    //criação do meu schema padrão usando zod
     const {register, handleSubmit, watch, reset}  = useForm<formSchemaType>({
         resolver: zodResolver(formSchema),
         defaultValues: {
@@ -55,7 +84,14 @@ export function Home () {
         },
     })
 
+    
+    //Monitora se a task recebeu algum dado para liberar o botão
+    const task = watch('task')
+    const isSubmitDisabled = !task;
+
+    //função que gera o novo ciclo 
     const handleCreateNewCycle = (data: formSchemaType) => {
+        setTaskResolver(data.task);
         const id = String(new Date().getTime());
         const newCycle: Cycle = {
             id,
@@ -69,9 +105,9 @@ export function Home () {
         reset()
     }
 
+    //função que interrompe o ciclo
     const handleInterruptCycle = () => {
-
-        setCycles(cycles.map(cycle => {
+        setCycles(state => state.map(cycle => {
             if (cycle.id == activeCycleId) {
                 return {...cycle, interruptedDate: new Date()}
             } else {
@@ -82,26 +118,25 @@ export function Home () {
         setActiveCycleId(null)
     }
 
-
-    const totalSeconds = activeCycle ? activeCycle.minutesAmount * 60 : 0
+    // Calculos de segundos e minutos
     const currentSeconds = activeCycle ? totalSeconds - amountSecondsPassed : 0
-
     const minutesAmount = Math.floor(currentSeconds / 60)
     const secondsAmount = currentSeconds  % 60
 
-    const task = watch('task')
-    const isSubmitDisabled = !task;
 
+    // declaração de minutos e segundos
     const minutes  =  String(minutesAmount).padStart(2, '0')
     const seconds  =  String(secondsAmount).padStart(2, '0')
 
+    //use effect que altera o valor do meu title da página
     useEffect(() => {
         if (activeCycle) {
-            document.title = `${task} - ${minutes}:${seconds}`
-
+            console.log(taskResolver);
+            document.title = `${taskResolver} - ${minutes}:${seconds}`
         }
     }, [minutes,seconds, activeCycle])
-    console.log(cycles)
+
+
     return (
         <HomeContainer>
             <form onSubmit={handleSubmit(handleCreateNewCycle)}>
@@ -126,8 +161,8 @@ export function Home () {
                         id="minutesAmount" 
                         placeholder="00"
                         disabled={!!activeCycle}
-                        step={5}
-                        min={5}
+                        step={1}
+                        min={1}
                         max={60}
                         {...register('minutesAmount', {valueAsNumber: true})}
                     />
