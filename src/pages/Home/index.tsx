@@ -6,8 +6,8 @@ import { z } from "zod"
 import { createContext, useState } from "react";
 import { NewCycleForm } from "./components/NewCycleForm"
 import { Countdown } from "./components/Countdown"
-
-
+import {  } from "@mui/styled-engine-sc"
+import BotaoTeste from "./components/BotaoTeste/Botao"
 
 // criação da interface dos meus ciclos 
 interface Cycle {
@@ -18,29 +18,36 @@ interface Cycle {
     interruptedDate?: Date
     finishedDate ?: Date
 }
-
 interface CyclesContextType {
     activeCycle: Cycle | undefined
     activeCycleId: string | null
     amountSecondsPassed: number
     markCurrentCycleAsFinished: () => void
     setSecondsPassed: (seconds: number) => void
+    taskResolver: string | boolean | null,
+}
+interface TaskContext {
+    handleStatusTask: (status: boolean) => void
 }
 // Criação do context
 export const CyclesContext = createContext({} as CyclesContextType)
+export const TaskContext = createContext({} as TaskContext)
+
 
 export function Home () {
     const [cycles, setCycles] = useState<Cycle[]>([])
     const [activeCycleId, setActiveCycleId] = useState<string | null>(null)
 
+    const [taskStatus, setTaskStatus] = useState<string | boolean | null>(false);
+
     //taskResolver para exibir no header do site
-    const [taskResolver, setTaskResolver] = useState<string | null>(null)
-    
-    
+    const [taskResolver, setTaskResolver] = useState<string | null>('Começar Tarefa 🔴')
+    document.title = `${taskResolver}`;
+
     // total de segundos
     const activeCycle = cycles.find(cycle => cycle.id === activeCycleId)
-
     const [amountSecondsPassed, setAmountSecondsPassed ] = useState(0)
+
     // pegando os tipos com base nos exemplos do SCHEMA
     type formSchemaType = z.infer<typeof formSchema>;
 
@@ -67,6 +74,7 @@ export function Home () {
     //Monitora se a task recebeu algum dado para liberar o botão
     const task = watch('task')
     const isSubmitDisabled = !task;
+
     function setSecondsPassed(seconds: number) {
         setAmountSecondsPassed(seconds)
     }
@@ -81,10 +89,16 @@ export function Home () {
                 }
             })
         )
+        handleStatusTask(true);
+        setActiveCycleId(null)
     }
 
+    function handleStatusTask( status=false ) {
+        setTaskStatus(status)
+    }
     //função que gera o novo ciclo 
     function handleCreateNewCycle(data: formSchemaType)  {
+        setTaskResolver(data.task);
         const id = String(new Date().getTime());
         const newCycle: Cycle = {
             id,
@@ -113,7 +127,7 @@ export function Home () {
 
     return (
         <HomeContainer>
-            <CyclesContext.Provider value={{ activeCycle, activeCycleId, markCurrentCycleAsFinished, amountSecondsPassed, setSecondsPassed }}>
+            <CyclesContext.Provider value={{ activeCycle, activeCycleId, markCurrentCycleAsFinished, amountSecondsPassed, setSecondsPassed, taskResolver}}>
                 <form onSubmit={handleSubmit(handleCreateNewCycle)}>
                     <FormProvider {...newCycleForm}>
                         <NewCycleForm />
@@ -132,6 +146,9 @@ export function Home () {
                     )}
                 </form>
             </CyclesContext.Provider>
+            <TaskContext.Provider value={{handleStatusTask}}>
+                <BotaoTeste taskStatus={taskStatus}/>
+            </TaskContext.Provider>
         </HomeContainer>
     )
 }
