@@ -1,20 +1,24 @@
-import { useContext, useEffect, useState } from "react"
+import { useContext, useEffect, /* useState */ } from "react"
 import { CountdownContainer, Separator } from "./styles"
 import { differenceInSeconds } from "date-fns"
-import { CyclesContext } from "../.."
-import { TaskInput } from "../NewCycleForm/styles"
+import { CyclesContext } from "../../../../contexts/CyclesContext"
 
 export const Countdown = () => {
      //usando context
-    const {activeCycle, activeCycleId, markCurrentCycleAsFinished, amountSecondsPassed, setSecondsPassed, taskResolver} = useContext(CyclesContext)
+    const {
+        activeCycle,
+        activeCycleId,
+        markCurrentCycleAsFinished,
+        amountSecondsPassed,
+        setSecondsPassed,
+        handleStatusTask
+        } = useContext(CyclesContext)
 
     const totalSeconds = activeCycle ? activeCycle.minutesAmount * 60 : 0
-
     // Calculos de segundos e minutos
     const currentSeconds = activeCycle ? totalSeconds - amountSecondsPassed : 0
     const minutesAmount = Math.floor(currentSeconds / 60)
     const secondsAmount = currentSeconds  % 60
-
     // declaração de minutos e segundos
     const minutes  =  String(minutesAmount).padStart(2, '0')
     const seconds  =  String(secondsAmount).padStart(2, '0')
@@ -23,7 +27,6 @@ export const Countdown = () => {
         let interval: number;
         
         if(activeCycle) {
-            document.title = `🟠 ${taskResolver} - ${minutes}:${seconds}`
             interval = setInterval(() => {
                 const secondsDifference =  differenceInSeconds(
                     new Date(),
@@ -35,8 +38,8 @@ export const Countdown = () => {
                     setSecondsPassed(totalSeconds)
                     clearInterval(interval)
                 } else {
+                    handleStatusTask(minutes, seconds)
                     setSecondsPassed(secondsDifference)
-                    console.log('456')
                 }
             }, 1000)
         }

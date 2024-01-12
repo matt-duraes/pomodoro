@@ -1,4 +1,3 @@
-import { StartCountButton } from './styles';
 import styled from "styled-components";
 
 

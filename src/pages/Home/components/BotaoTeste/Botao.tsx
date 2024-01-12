@@ -8,7 +8,6 @@ import { TaskContext } from '../..';
 
 export default function BotaoTeste({taskStatus = false}) {
   const {handleStatusTask} = React.useContext(TaskContext)
-  
   return (
     <Box sx={{ width: '310px',  position: 'fixed', top: '20px', right: '20px', textAlign: 'center'}}>
       <Collapse in={taskStatus}>
