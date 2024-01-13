@@ -94,7 +94,6 @@ export function CyclesContextProvider({children}: CycleContextProviderProps) {
         setActiveCycleId(id)
         setAmountSecondsPassed(0)
         setTaskResolver(newCycle.task)
-        // reset()
     }
 
     //função que interrompe o ciclo

@@ -42,19 +42,24 @@ export function Home () {
         },
     })
 
-    const { handleSubmit, watch, /*reset*/} = newCycleForm
+    const { handleSubmit, watch, reset} = newCycleForm
 
     //Monitora se a task recebeu algum dado para liberar o botão
     const task = watch('task')
     const isSubmitDisabled = !task;
 
-    function handleStatusTask( status=false ) {
+    function handleStatusTask(status= false ) {
         handleTaskFinished(status)
+    }
+    
+    function handleCreateNewCycle(data: formSchemaType ) {
+        createNewCycle(data)
+        reset()
     }
 
     return (
         <HomeContainer>
-            <form onSubmit={handleSubmit(createNewCycle)}>
+            <form onSubmit={handleSubmit(handleCreateNewCycle)}>
                 <FormProvider {...newCycleForm}>
                     <NewCycleForm />
                 </FormProvider>
