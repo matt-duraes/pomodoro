@@ -1,4 +1,4 @@
-## Projeto de Relógio Pomodoro com listagem de tarefas 
+## Relógio Pomodoro com listagem de tarefas 
 
 ## Tecnologias utilizadas
 - Typescript
